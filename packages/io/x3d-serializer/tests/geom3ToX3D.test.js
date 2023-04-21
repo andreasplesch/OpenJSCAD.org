@@ -3,6 +3,7 @@ const test = require('ava')
 const countOf = require('../../test/helpers/countOf')
 
 const { colors, geometries, primitives, transforms } = require('@jscad/modeling')
+const { union } = require('@jscad/modeling').booleans
 
 const serializer = require('../src/index.js')
 
@@ -41,10 +42,11 @@ test('serialize 3D geometry to X3D IndexedTriangleSet', (t) => {
 
   const geom3 = colors.colorize([0.5, 1, 0.5, 1.0], transforms.center({ relativeTo: [5, 5, 5] }, primitives.cube()))
 
-  results = serializer.serialize({metadata: false}, geom2, geom3)
+  results = serializer.serialize({metadata: false}, union(geom2, geom3), geom2, geom3)
   t.is(results.length, 1)
 
   obs = results[0]
+  console.log(obs)
   t.is(countOf('X3D', obs), 2)
   t.is(countOf('head', obs), 2)
   t.is(countOf('meta', obs), 1)

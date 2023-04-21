@@ -108,7 +108,7 @@ ${stringify(body, 2)}`
 }
 
 const convertObjects = (objects, options) => {
-  let scene = ['Scene', {}]
+  let scene = ['Scene', ['Transform', { rotation: '1 0 0 -1.5708'}]]
   const shapes = []
   objects.forEach((object, i) => {
     options.statusCallback && options.statusCallback({ progress: 100 * i / objects.length })
@@ -128,7 +128,7 @@ const convertObjects = (objects, options) => {
       shapes.push(convertPath2(object, options))
     }
   })
-  scene = scene.concat(shapes)
+  scene[1] = scene[1].concat(shapes)
   return [scene]
 }
 
@@ -176,9 +176,9 @@ const convertPolyline2D = (object, options) => {
 const convertAppearance = (object, options) => {
   const colorRGB = object.color.slice(0, 3)
   const diffuseColor = colorRGB.join(' ')
-  const emissiveColor = colorRGB.join(' ')
+  //const emissiveColor = colorRGB.join(' ')
   const transparency = object.color[3]
-  return ['Appearance', ['Material', { diffuseColor, emissiveColor, transparency }]]
+  return ['Appearance', ['Material', { diffuseColor, transparency }]]
 }
 
 /*
@@ -186,10 +186,12 @@ const convertAppearance = (object, options) => {
  */
 const convertGeom3 = (object, options) => {
   const shape = ['Shape', {}, convertMesh(object, options)]
+  let appearance = ['Appearance', ['Material']]
   if (object.color) {
-    shape.push(convertAppearance(object, options))
+    appearance = convertAppearance(object, options)
+    //shape.push(convertAppearance(object, options))
   }
-  return shape
+  return shape.concat([appearance])
 }
 
 const convertMesh = (object, options) => {
