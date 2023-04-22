@@ -39,7 +39,7 @@ test('serialize 2D geometry to X3D Polyline2D', (t) => {
   t.is(countOf('Shape', obs), 2)
   t.is(countOf('Polyline2D', obs), 1)
 
-  const shape3 = colors.colorize([0, 0, 0], shape2)
+  const shape3 = colors.colorize([0, 0, 1], shape2)
 
   results = serialize({metadata: false}, shape3)
   t.is(results.length, 1)
@@ -58,7 +58,7 @@ test('serialize 2D geometry to X3D Polyline2D', (t) => {
   // for color
   t.is(countOf('Appearance', obs), 2)
   t.is(countOf('Material', obs), 1)
-  t.is(countOf('diffuseColor', obs), 1)
+  t.is(countOf('diffuseColor', obs), 0)
   t.is(countOf('emissiveColor', obs), 1)
 
 
@@ -66,6 +66,7 @@ test('serialize 2D geometry to X3D Polyline2D', (t) => {
   t.is(results.length, 1)
 
   obs = results[0]
+  console.log(obs)
   t.is(countOf('X3D', obs), 2)
   t.is(countOf('head', obs), 2)
   t.is(countOf('meta', obs), 1)
@@ -79,7 +80,6 @@ test('serialize 2D geometry to X3D Polyline2D', (t) => {
   // for color
   t.is(countOf('Appearance', obs), 2)
   t.is(countOf('Material', obs), 1)
-  t.is(countOf('diffuseColor', obs), 1)
+  t.is(countOf('diffuseColor', obs), 0)
   t.is(countOf('emissiveColor', obs), 1)
 })
-
