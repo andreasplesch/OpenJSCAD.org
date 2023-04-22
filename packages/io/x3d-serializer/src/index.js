@@ -48,6 +48,7 @@ const mimeType = 'model/x3d+xml'
  * Serialize the give objects to X3D elements (XML).
  * @param {Object} options - options for serialization, REQUIRED
  * @param {Array} [options.color=[0,0,1,1]] - default color for objects
+ * @param {Boolean} [options.smooth=false] - use averaged vertex normals
  * @param {Boolean} [options.metadata=true] - add metadata to 3MF contents, such at CreationDate
  * @param {String} [options.unit='millimeter'] - unit of design; millimeter, inch, feet, meter or micrometer
  * @param {Function} [options.statusCallback] - call back function for progress ({ progress: 0-100 })
@@ -61,6 +62,7 @@ const mimeType = 'model/x3d+xml'
 const serialize = (options, ...objects) => {
   const defaults = {
     color: [0, 0, 1, 1.0], // default colorRGBA specification
+    smooth: false,
     decimals: 1000,
     metadata: true,
     unit: 'millimeter', // millimeter, inch, feet, meter or micrometer
@@ -108,7 +110,7 @@ ${stringify(body, 2)}`
 }
 
 const convertObjects = (objects, options) => {
-  let scene = ['Scene', {}]
+  let scene = ['Scene', ['Transform', { rotation: '1 0 0 -1.5708'}]]
   const shapes = []
   objects.forEach((object, i) => {
     options.statusCallback && options.statusCallback({ progress: 100 * i / objects.length })
@@ -128,7 +130,7 @@ const convertObjects = (objects, options) => {
       shapes.push(convertPath2(object, options))
     }
   })
-  scene = scene.concat(shapes)
+  scene[1] = scene[1].concat(shapes)
   return [scene]
 }
 
@@ -140,7 +142,7 @@ const convertPath2 = (object, options) => {
   if (points.length > 1 && object.isClosed) points.push(points[0])
   const shape = ['Shape', {}, convertPolyline2D(poly2.create(points), options)]
   if (object.color) {
-    shape.push(convertAppearance(object, options))
+    shape.push(convertAppearance(object, 'emissiveColor', options))
   }
   return shape
 }
@@ -155,7 +157,7 @@ const convertGeom2 = (object, options) => {
     if (outline.length > 1) outline.push(outline[0]) // close the outline for conversion
     const shape = ['Shape', {}, convertPolyline2D(poly2.create(outline), options)]
     if (object.color) {
-      shape.push(convertAppearance(object, options))
+      shape.push(convertAppearance(object, 'emissiveColor', options))
     }
     group.push(shape)
   })
@@ -173,12 +175,11 @@ const convertPolyline2D = (object, options) => {
 /*
  * Convert color to Appearance
  */
-const convertAppearance = (object, options) => {
+const convertAppearance = (object, colorField, options) => {
   const colorRGB = object.color.slice(0, 3)
-  const diffuseColor = colorRGB.join(' ')
-  const emissiveColor = colorRGB.join(' ')
+  const color = colorRGB.join(' ')
   const transparency = 1.0 - object.color[3]
-  return ['Appearance', ['Material', { diffuseColor, emissiveColor, transparency }]]
+  return ['Appearance', ['Material', { [colorField]: color, transparency }]]
 }
 
 /*
@@ -186,10 +187,12 @@ const convertAppearance = (object, options) => {
  */
 const convertGeom3 = (object, options) => {
   const shape = ['Shape', {}, convertMesh(object, options)]
+  let appearance = ['Appearance', ['Material']]
   if (object.color) {
-    shape.push(convertAppearance(object, options))
+    appearance = convertAppearance(object, 'diffuseColor', options)
+    //shape.push(convertAppearance(object, options))
   }
-  return shape
+  return shape.concat([appearance])
 }
 
 const convertMesh = (object, options) => {
@@ -202,7 +205,7 @@ const convertMesh = (object, options) => {
 
   const faceset = [
     'IndexedTriangleSet',
-    { ccw: 'true', colorPerVertex: 'false', solid: 'false', index: indexList },
+    { ccw: 'true', colorPerVertex: 'false', normalPerVertex: options.smooth === true, solid: 'false', index: indexList },
     ['Coordinate', { point: pointList }]
   ]
   if (!object.color) {
