@@ -81,7 +81,7 @@ const serialize = (options, ...objects) => {
   // construct the contents of the XML
   let body = ['X3D',
     {
-      profile: 'Interchange',
+      profile: 'Immersive',
       version: '4.0',
       'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema-instance',
       'xsd:noNamespaceSchemaLocation': 'http://www.web3d.org/specifications/x3d-4.0.xsd'
