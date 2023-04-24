@@ -82,7 +82,7 @@ const serialize = (options, ...objects) => {
   let body = ['X3D',
     {
       profile: 'Immersive',
-      version: '4.0',
+      version: '3.3',
       'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema-instance',
       'xsd:noNamespaceSchemaLocation': 'http://www.web3d.org/specifications/x3d-4.0.xsd'
     }
@@ -110,7 +110,6 @@ ${stringify(body, 2)}`
 }
 
 const convertObjects = (objects, options) => {
-  let scene = ['Scene', ['Transform', { rotation: '1 0 0 -1.5708'}]]
   const shapes = []
   objects.forEach((object, i) => {
     options.statusCallback && options.statusCallback({ progress: 100 * i / objects.length })
@@ -130,7 +129,8 @@ const convertObjects = (objects, options) => {
       shapes.push(convertPath2(object, options))
     }
   })
-  scene[1] = scene[1].concat(shapes)
+  const transform = ['Transform', { rotation: '1 0 0 -1.5708' }, ...shapes]
+  const scene = ['Scene', {}, transform]
   return [scene]
 }
 
@@ -179,7 +179,9 @@ const convertAppearance = (object, colorField, options) => {
   const colorRGB = object.color.slice(0, 3)
   const color = colorRGB.join(' ')
   const transparency = 1.0 - object.color[3]
-  return ['Appearance', ['Material', { [colorField]: color, transparency }]]
+  const specularColor = "0.2 0.2 0.2"
+  const shininess = 8/256 // from regl renderer
+  return ['Appearance', ['Material', { [colorField]: color, transparency, specularColor, shininess }]]
 }
 
 /*
